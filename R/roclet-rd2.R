@@ -5,9 +5,9 @@
 
 #' Replacement Roclet for Generating Rd Files
 #' 
-#' This roclets acts as a droppin replacement for [roxygen2::rd_roclet], 
+#' This roclets acts as a drop-in replacement for [roxygen2::rd_roclet], 
 #' adding some extra features such as bibliography, or inline declaration
-#' for S4 methods.
+#' for S4 generic.
 #' 
 #' To use it add it needs to be declared in the roxygen options within 
 #' your package's DESCRIPTION file:
@@ -39,7 +39,10 @@ rd2_roclet <- function() {
 #' @export
 #' @rdname rd2_roclet
 roclet_tags.roclet_rd2 <- function(x) {
-  tags <- roclet_tags.roclet_rd(x)
+  # call rd_roclet tags method
+  tags <- NextMethod()
+  
+  # add extra tags
   c(tags, list(
     cite = tag_cite,
     bibliography = tag_bibliography,
@@ -48,6 +51,7 @@ roclet_tags.roclet_rd2 <- function(x) {
   
 }
 
+#' @inheritParams roxygen2::roclet_process
 #' @export
 #' @rdname rd2_roclet
 roclet_process.roclet_rd2 <- function(x, parsed, base_path, global_options = list()){
@@ -92,6 +96,7 @@ roclet_process.roclet_rd2 <- function(x, parsed, base_path, global_options = lis
   
 }
 
+#' @inheritParams roxygen2::roclet_output
 #' @export
 roclet_output.roclet_rd2 <- function(x, results, base_path, ..., is_first = FALSE) {
   

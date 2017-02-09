@@ -17,9 +17,9 @@ rd2_roclet()
 \method{roclet_clean}{roclet_rd2}(x, base_path)
 }
 \description{
-This roclets acts as a droppin replacement for [roxygen2::rd_roclet], 
+This roclets acts as a drop-in replacement for [roxygen2::rd_roclet], 
 adding some extra features such as bibliography, or inline declaration
-for S4 methods.
+for S4 generic.
 }
 \details{
 To use it add it needs to be declared in the roxygen options within 

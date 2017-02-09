@@ -3,6 +3,8 @@
 # Author: Renaud Gaujoux
 ###############################################################################
 
+`%||%` <- function(a, b) if( is.null(a) ) b else a
+
 #' @import bibtex
 # copied and fixed from bibtex::read.bib
 read.bib2 <- function (file = findBibFile(package), package = "bibtex", encoding = "unknown", 
@@ -24,6 +26,7 @@ read.bib2 <- function (file = findBibFile(package), package = "bibtex", encoding
   out <- make.citation.list(out, header, footer)
   attr(out, "strings") <- at[["strings"]]
   # keys must be retrieved here to handle the case of skipped bibentries
+  `%||%` <- function(a, b) if( is.null(a) ) b else a
   keys <- sapply(out, function(x) attr(x, 'key') %||% x$key)
   names(out) <- keys
   out

@@ -68,6 +68,7 @@ process_cite <- function(block, base_path, env, global_options){
 }
 
 # find cite tags and resolve them against bibfiles
+#' @importFrom stringr str_match_all str_trim
 gsub_cite <- function(tag, bibs, short = TRUE, block = NULL){
   
   # cope for different types of tags
