@@ -1,0 +1,11 @@
+Package: roclets
+Title: Extra Roclets Extending Roxygen2 Capabilities
+Version: 0.0.0.9000
+Authors@R: person("Renaud", "Gaujoux", email = "renaud@tx.technion.ac.il", role = c("aut", "cre"))
+Description: Define roxygen2 roclets.
+Depends: R (>= 3.3.2)
+License: GPL (>=2)
+Encoding: UTF-8
+LazyData: true
+Imports: roxygen2
+RoxygenNote: 6.0.0.9000
