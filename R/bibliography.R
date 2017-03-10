@@ -120,6 +120,7 @@ RoxyBibObject <- local({
       }
     })
 
+#' @importFrom utils cite
 RoxyBib <- R6::R6Class("RoxyTopic", public = list(
         
       # data members
@@ -154,10 +155,11 @@ RoxyBib <- R6::R6Class("RoxyTopic", public = list(
         path <- setdiff(self$bibfiles, self$bibs_loaded)[1L]
         if( is.na(path) ) return(FALSE)
         library(bibtex)
-        newbibs <- read.bib2(file = path)
+        message(sprintf("Loading Bibtex file %s ... ", path), appendLF = FALSE)
+        newbibs <- suppressMessages(suppressWarnings(read.bib2(file = path)))
         n <- length(self$bibs)
         self$bibs <- if( !length(self$bibs) ) newbibs else c(self$bibs, newbibs[setdiff(names(newbibs), names(self$bibs))])
-        message(sprintf("Loaded %i new bibentry from %s", length(self$bibs) - n, path))
+        message(sprintf("OK [%i/%i new entries]", length(self$bibs) - n, length(newbibs)))
         self$bibs_loaded <- c(self$bibs_loaded, path)
         TRUE
       },
@@ -166,7 +168,9 @@ RoxyBib <- R6::R6Class("RoxyTopic", public = list(
       update_bibfile = function(file = NULL){
         if( !length(self$bibentries) ) return()
         file <- file %||% file.path(self$base_path, 'inst/REFERENCES.bib')
-        message(sprintf("Writing file %s", basename(file)))
+        message(sprintf("Writing file inst/%s", basename(file)))
+        # create inst/ subdirectory if necessary
+        dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE)
         write.bib(self$bibentries, file = file)
         file
       },
@@ -178,7 +182,7 @@ RoxyBib <- R6::R6Class("RoxyTopic", public = list(
         while( anyNA(hit) ){
           bibkeys <- names(self$bibs)
           hit[key] <- match(key, bibkeys)
-          if( !self$load_bib() ) break
+          if( anyNA(hit) && !self$load_bib() ) break
         }
         
         if( anyNA(hit) ){
@@ -202,16 +206,23 @@ RoxyBib <- R6::R6Class("RoxyTopic", public = list(
         
         # format accordingly
         if( !short ){
-          res[names(bibitems)] <- format(bibitems)
+          # only either DOI or first URL
+          lapply(names(bibitems), function(n){
+                b <- bibitems[n]
+                if( length(b$doi) ){
+                  bibitems[n]$url <<- NULL
+                  return()
+                }
+                urls <- b$urls
+                if( !length(urls) || !nzchar(urls) ) return()
+                bibitems[n]$url <<- strsplit(urls, " ", fixed = TRUE)[[1]][1L]
+              })
+          # format citations
+          res[names(bibitems)] <- format(bibitems, style = 'text')
           res
         }else{
-          res[names(bibitems)] <- sapply(bibitems, function(x){
-                if( length(x$author$family) <= 1L ) 
-                  paste(x$author$family, ' (', x$year, ')', sep='')				
-                else{
-                  paste(x$author$family[[1]], ' et al. (', x$year, ')', sep='')
-                }
-              })
+          # use utils::cite
+          res[names(bibitems)] <- cite(names(bibitems), bibitems, textual = TRUE, longnamesfirst = FALSE) 
           res
         }
       }
