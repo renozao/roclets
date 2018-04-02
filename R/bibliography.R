@@ -144,7 +144,7 @@ RoxyBib <- R6::R6Class("RoxyTopic", public = list(
       },
       
       add_bibfile = function(path, check = TRUE, block = NULL, prepend = FALSE){
-        if( check && !file.exists(path) ) block_warning(block, "could not find bibliograpy file ", path)
+        if( check && !file.exists(path) ) roxygen2:::block_warning(block, "could not find bibliograpy file ", path)
         npath <- normalizePath(path)
         self$bibfiles <- union(self$bibfiles, npath)
         if( prepend ) self$bibfiles <- union(npath, self$bibfiles)
@@ -187,7 +187,7 @@ RoxyBib <- R6::R6Class("RoxyTopic", public = list(
         
         if( anyNA(hit) ){
           msg <- sprintf("Could not find bib entry for key(s) %s", paste(names(hit)[is.na(hit)], collapse = ', '))
-          if( !is.null(block) ) block_warning(block, msg)
+          if( !is.null(block) ) roxygen2:::block_warning(block, msg)
           else warning(msg)
         }
         
