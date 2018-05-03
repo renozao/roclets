@@ -68,6 +68,8 @@ roclet_process.roclet_rd2 <- function(x, blocks, env, base_path, global_options 
   
   # get bibfile cache object
   BIBS <- RoxyBibObject(base_path = base_path)
+  # parse citations in vignettes
+  process_cite_vignettes(BIBS, base_path)
   
   # extract citations in tag values and add them as reference tags
   for (i in seq_along(parsed$blocks)) {
