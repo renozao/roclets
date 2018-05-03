@@ -54,11 +54,16 @@ roclet_tags.roclet_rd2 <- function(x) {
 #' @inheritParams roxygen2::roclet_process
 #' @export
 #' @rdname rd2_roclet
-roclet_process.roclet_rd2 <- function(x, parsed, base_path, global_options = list()){
+roclet_process.roclet_rd2 <- function(x, blocks, env, base_path, global_options = list()){
   
+  parsed <- if( !is.null(blocks[['blocks']]) ) blocks else list(blocks = blocks) 
+  parsed$env <- parsed$env %||% env
   # build inline set
   inline_set <- unlist(sapply(parsed$blocks, function(x){
-        if( !is.null(x$inline) && class(x$object) == 's4generic' ) as.character(x$object$value@generic)
+        x$object <- x$object %||% attr(x, 'object')
+        if( !is.null(x$inline) && class(x$object) == 's4generic' ){
+          setNames(as.character(x$object$value@generic), x$rdname)
+        }
     }))
   
   # get bibfile cache object
@@ -69,16 +74,23 @@ roclet_process.roclet_rd2 <- function(x, parsed, base_path, global_options = lis
     block <- parsed$blocks[[i]]
     hash <- digest(block)
     
-    if( class(block$object) == 's4method' && 
-        (as.character(block$object$value@generic) %||% '') %in% inline_set && 
-        is.null(block$describeIn) ){
-      # build inline description from title and description
-      descIn <- list(name = as.character(block$object$value@generic)
-                      , description = paste(block$title, if( !identical(block$description, block$title) ) block$description, sep = "\n\n"))
-      if( !length(descIn$description) ) block$rdname <- block$rdname %||% descIn$name 
-      else{
-        block$describeIn <- descIn
-        block$title <- block$description <- NULL
+    block$object <- block$object %||% attr(block, 'object')
+    if( any(class(block$object) %in% 's4method') ){
+        generic_name <- as.character(block$object$value@generic) 
+        if( (generic_name %||% '') %in% inline_set && is.null(block$describeIn) ){
+#          i <- match(generic_name, inline_set)
+#          target_name <- names(inline_set)[i]
+#          str(target_name)
+#          if( is.na(target_name) || target_name == '' ) target_name <- generic_name
+          target_name <- generic_name
+          # build inline description from title and description
+          descIn <- list(name = target_name
+                          , description = paste(block$title, if( !identical(block$description, block$title) ) block$description, sep = "\n\n"))
+          if( !length(descIn$description) ) block$rdname <- block$rdname %||% descIn$name 
+          else{
+            block$describeIn <- descIn
+            block$title <- block$description <- NULL
+        }
       }
     }
     
@@ -87,10 +99,13 @@ roclet_process.roclet_rd2 <- function(x, parsed, base_path, global_options = lis
     
     # process cite
     block <- process_cite(block, base_path, parsed$env, global_options)
+    attr(block, 'filename') <- attr(block, 'filename') %||% ''
+    attr(block, 'location') <- attr(block, 'location') %||% ''
     
     if( digest(block) != hash ) parsed$blocks[[i]] <- block
   }
   
+  blocks <- parsed[['blocks']]
   # call roclet_rd process method to update the .Rd files
   NextMethod()
   

@@ -1,23 +1,23 @@
 # Bibliography support
-# 
+#
 # Author: Renaud Gaujoux
 ###############################################################################
 
 ## Handling of bibliography-related tags
 #' Extra Roxygen Tags
-#'  
-#' @param x roxy_tag object 
-#' 
-#' @export 
-#' @rdname roxy_tag 
+#'
+#' @param x roxy_tag object
+#'
+#' @export
+#' @rdname roxy_tag
 tag_cite <- function(x){
-  # convert into @references \cite{<entry1>} \cite{<entry2>} ... 
+  # convert into @references \cite{<entry1>} \cite{<entry2>} ...
   x <- tag_words()(x)
   roxy_tag('references', val = sprintf("\\cite{%s}", x$val))
 }
 
-#' @export 
-#' @rdname roxy_tag 
+#' @export
+#' @rdname roxy_tag
 tag_bibliography <- function(x){
   # add path to bib file to current BibObject handler
   bib <- RoxyBibObject()
@@ -28,7 +28,7 @@ tag_bibliography <- function(x){
 
 # parse vignettes for \cite commands
 process_cite_vignettes <- function(roxybib, base_path){
-  
+
   # list vignettes
   vfiles <- list.files(file.path(base_path, 'vignettes'), pattern = "\\.((rmd)|(rnw))$", ignore.case = TRUE, full.names = TRUE)
   # parse and format to add to current roxy bib object
@@ -46,21 +46,21 @@ process_cite_vignettes <- function(roxybib, base_path){
 # substitutes \cite commands with short or long citation
 #' @importFrom digest digest
 process_cite <- function(block, base_path, env, global_options){
-  
+
   # get bibliography handler (cached)
   BIBS <- RoxyBibObject()
-  
+
   tags_cite <- global_options$cite_tags %||% c('introduction', 'description', 'details', 'section', 'param')
   # backup original block value
   block0 <- block
-  
+
   # 1. process all tags that can have \cite commands
   j_cite <- which(names(block) %in% tags_cite)
   if( length(j_cite) ){
     cite_res <- lapply(block[j_cite], gsub_cite, bibs = BIBS, short = TRUE, block = block)
     block[j_cite] <- lapply(cite_res, '[[', 'value')
     bibkeys <- unique(unlist(lapply(cite_res, '[[', 'bibkeys')))
-    
+
     # 2. add parsed keys as references tags
     if( length(bibkeys) ){
       bibkeys <- unique(bibkeys)
@@ -69,7 +69,7 @@ process_cite <- function(block, base_path, env, global_options){
           })
     }
   }
-  
+
   # 3. process references
   j_ref <- which(names(block) %in% 'references')
   if( length(j_ref) ){
@@ -77,7 +77,7 @@ process_cite <- function(block, base_path, env, global_options){
     # process references as markdown
     block[j_ref] <- lapply(ref_res, function(x) tag_markdown(roxy_tag('references', val = x$value))$val)
   }
-  
+
   # update in parsed block only if necessary
   if( digest(block) != digest(block0) ) return(block)
   block0
@@ -86,25 +86,25 @@ process_cite <- function(block, base_path, env, global_options){
 # find cite tags and resolve them against bibfiles
 #' @importFrom stringr str_match_all str_trim
 gsub_cite <- function(tag, bibs, short = TRUE, block = NULL){
-  
+
   # cope for different types of tags
   field <- intersect(names(tag), c('value', 'val'))
   if( length(field) ){
     field <- field[1L]
     x <- tag[[field]]
-    
+
   }else x <- tag
-  
+
   # extract \cite tags
   cite_match <- str_match_all(x, "\\\\cite\\{([^}]+)\\}")
   # for each process citations
   res <- list(value = x, bibkeys = NULL)
-  
+
   lapply(seq_along(cite_match), function(i){
         m <- cite_match[[i]]
         # no \cite command: return string untouched
         if( !length(m) ) return()
-        
+
         # split into individual bibkeys
         keys <- strsplit(m[, 2L], '[;,]')
         # process each command
@@ -115,12 +115,12 @@ gsub_cite <- function(tag, bibs, short = TRUE, block = NULL){
               res$value[i] <<- gsub(cite_s, paste(fkey, collapse = if( short ) ', ' else "\n\n"), res$value[i], fixed = TRUE)
             }, m[, 1L], keys)
       })
-  
+
   if( length(field) ){
     tag[[field]] <- res$value
     res$value <- tag
   }
-  
+
   res
 }
 
@@ -138,19 +138,19 @@ RoxyBibObject <- local({
 
 #' @importFrom utils cite
 RoxyBib <- R6::R6Class("RoxyBib", public = list(
-        
+
       # data members
       base_path = NA,
       bibfiles = character(),
       bibs_loaded = character(),
       bibs = list(),
       bibentries = list(),
-      
+
       # constructor
       initialize = function(path = NA) {
         self$set_path(path)
       },
-      
+
       set_path = function(path = NA){
         if( is.na(path) ) return()
         self$base_path <- path
@@ -158,7 +158,7 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
         # append file to set of bibfiles if it exists
         if( file.exists(ref_file) ) self$add_bibfile(ref_file, prepend = TRUE)
       },
-      
+
       add_bibfile = function(path, check = TRUE, block = NULL, prepend = FALSE){
         if( check && !file.exists(path) ) roxygen2:::block_warning(block, "could not find bibliograpy file ", path)
         npath <- normalizePath(path)
@@ -166,7 +166,7 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
         if( prepend ) self$bibfiles <- union(npath, self$bibfiles)
         npath
       },
-      
+
       load_bib = function(){
         path <- setdiff(self$bibfiles, self$bibs_loaded)[1L]
         if( is.na(path) || !file.exists(path) ) return(FALSE)
@@ -179,7 +179,7 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
         self$bibs_loaded <- c(self$bibs_loaded, path)
         TRUE
       },
-      
+
       # write package REFERENCES.bib file
       update_bibfile = function(file = NULL){
         if( !length(self$bibentries) ) return()
@@ -190,36 +190,41 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
         write.bib(self$bibentries, file = file)
         file
       },
-      
+
       # fetch bibitem from key
       get_bib = function(key, block = NULL){
-        
+
         hit <- setNames(rep(NA_integer_, length(key)), key)
         while( anyNA(hit) ){
           bibkeys <- names(self$bibs)
           hit[key] <- match(key, bibkeys)
           if( anyNA(hit) && !self$load_bib() ) break
         }
-        
+
         if( anyNA(hit) ){
           msg <- sprintf("Could not find bib entry for key(s) %s", paste(names(hit)[is.na(hit)], collapse = ', '))
-          if( !is.null(block) ) roxygen2:::block_warning(block, msg)
-          else warning(msg)
+          if( !is.null(block) ){
+            attr(block, 'filename') <- attr(block, 'filename') %||% ''
+            attr(block, 'location') <- attr(block, 'location') %||% ''
+            roxygen2:::block_warning(block, msg)
+            
+          }else warning(msg)
+
         }
-        
+
         self$bibs[names(hit)[!is.na(hit)]]
       },
-      
+
       format_cite = function(key, short = TRUE, ...){
         # load bibitem
         res <- setNames(key, key)
         bibitems <- self$get_bib(key, ...)
         if( !length(bibitems) ) return(res)
-        
+
         # add bibitems to set of used bibitems for final output in package REFERENCES.bib
         if( !length(self$bibentries) ) self$bibentries <- bibitems
         else self$bibentries <- c(self$bibentries, bibitems[setdiff(names(bibitems), names(self$bibentries))])
-        
+
         # format accordingly
         if( !short ){
           # only either DOI or first URL
@@ -238,11 +243,11 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
           res
         }else{
           # use utils::cite
-          res[names(bibitems)] <- cite(names(bibitems), bibitems, textual = TRUE, longnamesfirst = FALSE) 
+          res[names(bibitems)] <- cite(names(bibitems), bibitems, textual = TRUE, longnamesfirst = FALSE)
           res
         }
       }
-  
+
   ))
 
 
