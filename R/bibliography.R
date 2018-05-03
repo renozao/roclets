@@ -26,6 +26,22 @@ tag_bibliography <- function(x){
   NULL
 }
 
+# parse vignettes for \cite commands
+process_cite_vignettes <- function(roxybib, base_path){
+  
+  # list vignettes
+  vfiles <- list.files(file.path(base_path, 'vignettes'), pattern = "\\.((rmd)|(rnw))$", ignore.case = TRUE, full.names = TRUE)
+  # parse and format to add to current roxy bib object
+  lapply(vfiles, function(f){
+        l <- readLines(f)
+        i <- grep("^\\s*\\\\begin\\s*\\{\\s*document\\s*\\}", l)
+        if( length(i) ) l <- tail(l, -i)
+        x <- paste0(l, collapse = "\n")
+        gsub_cite(x, roxybib)
+      })
+  NULL
+}
+
 
 # substitutes \cite commands with short or long citation
 #' @importFrom digest digest
@@ -90,7 +106,7 @@ gsub_cite <- function(tag, bibs, short = TRUE, block = NULL){
         if( !length(m) ) return()
         
         # split into individual bibkeys
-        keys <- strsplit(m[, 2L], ';')
+        keys <- strsplit(m[, 2L], '[;,]')
         # process each command
         mapply(function(cite_s, key){
               key <- str_trim(key)
@@ -121,7 +137,7 @@ RoxyBibObject <- local({
     })
 
 #' @importFrom utils cite
-RoxyBib <- R6::R6Class("RoxyTopic", public = list(
+RoxyBib <- R6::R6Class("RoxyBib", public = list(
         
       # data members
       base_path = NA,
@@ -153,7 +169,7 @@ RoxyBib <- R6::R6Class("RoxyTopic", public = list(
       
       load_bib = function(){
         path <- setdiff(self$bibfiles, self$bibs_loaded)[1L]
-        if( is.na(path) ) return(FALSE)
+        if( is.na(path) || !file.exists(path) ) return(FALSE)
         library(bibtex)
         message(sprintf("Loading Bibtex file %s ... ", path), appendLF = FALSE)
         newbibs <- suppressMessages(suppressWarnings(read.bib2(file = path)))
