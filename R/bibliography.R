@@ -107,7 +107,7 @@ gsub_cite <- function(tag, bibs, short = TRUE, block = NULL){
   }else x <- tag
 
   # extract \cite tags
-  cite_match <- str_match_all(x, "\\\\cite\\{([^}]+)\\}")
+  cite_match <- str_match_all(x, "(\\\\cite\\{([^}]+)\\}|\\[@([^]]+)\\])")
   # for each process citations
   res <- list(value = x, bibkeys = NULL)
   
@@ -117,7 +117,9 @@ gsub_cite <- function(tag, bibs, short = TRUE, block = NULL){
         if( !length(m) ) return()
         
         # split into individual bibkeys
-        keys <- strsplit(m[, 2L], '[;,]')
+        matched_keys <- ifelse(is.na(m[, 3L]), m[, 4L], m[, 3L])
+        keys <- strsplit(matched_keys, '[;,@]')
+        #print(keys)
         # process each command
         mapply(function(cite_s, key){
               key <- str_trim(key)
