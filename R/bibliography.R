@@ -22,6 +22,7 @@ tag_bibliography <- function(x){
   # add path to bib file to current BibObject handler
   bib <- RoxyBibObject()
   x <- tag_words()(x)
+  x <- block_backport(x)
   bib$add_bibfile(x$val, block = x)
   NULL
 }
@@ -37,7 +38,10 @@ process_cite_vignettes <- function(roxybib, base_path){
         i <- grep("^\\s*\\\\begin\\s*\\{\\s*document\\s*\\}", l)
         if( length(i) ) l <- tail(l, -i)
         x <- paste0(l, collapse = "\n")
-        gsub_cite(x, roxybib)
+        message(sprintf("Processing citations in vignette '%s' ... ", basename(f)), appendLF = FALSE)
+        res <- gsub_cite(x, roxybib)
+        message(sprintf('OK [%s citations]', length(res)))
+        res
       })
   NULL
 }
@@ -47,6 +51,9 @@ process_cite_vignettes <- function(roxybib, base_path){
 #' @importFrom digest digest
 process_cite <- function(block, base_path, env, global_options){
 
+  # to ensure 
+  block <- block_backport(block)
+  
   # get bibliography handler (cached)
   BIBS <- RoxyBibObject()
 
@@ -78,8 +85,12 @@ process_cite <- function(block, base_path, env, global_options){
     block[j_ref] <- lapply(ref_res, function(x) tag_markdown(roxy_tag('references', val = x$value))$val)
   }
 
+  block <- block_backport(block)
   # update in parsed block only if necessary
-  if( digest(block) != digest(block0) ) return(block)
+  if( digest(block) != digest(block0) ){
+    # str(block)
+    return(block)
+  }
   block0
 }
 
@@ -99,12 +110,12 @@ gsub_cite <- function(tag, bibs, short = TRUE, block = NULL){
   cite_match <- str_match_all(x, "\\\\cite\\{([^}]+)\\}")
   # for each process citations
   res <- list(value = x, bibkeys = NULL)
-
+  
   lapply(seq_along(cite_match), function(i){
         m <- cite_match[[i]]
         # no \cite command: return string untouched
         if( !length(m) ) return()
-
+        
         # split into individual bibkeys
         keys <- strsplit(m[, 2L], '[;,]')
         # process each command
@@ -160,6 +171,7 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
       },
 
       add_bibfile = function(path, check = TRUE, block = NULL, prepend = FALSE){
+        block <- block_backport(block)
         if( check && !file.exists(path) ) roxygen2:::block_warning(block, "could not find bibliograpy file ", path)
         npath <- normalizePath(path)
         self$bibfiles <- union(self$bibfiles, npath)
@@ -204,8 +216,7 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
         if( anyNA(hit) ){
           msg <- sprintf("Could not find bib entry for key(s) %s", paste(names(hit)[is.na(hit)], collapse = ', '))
           if( !is.null(block) ){
-            attr(block, 'filename') <- attr(block, 'filename') %||% ''
-            attr(block, 'location') <- attr(block, 'location') %||% ''
+            block <- block_backport(block)
             roxygen2:::block_warning(block, msg)
             
           }else warning(msg)

@@ -54,13 +54,13 @@ roclet_tags.roclet_rd2 <- function(x) {
 #' @inheritParams roxygen2::roclet_process
 #' @export
 #' @rdname rd2_roclet
-roclet_process.roclet_rd2 <- function(x, blocks, env, base_path, global_options = list()){
+roclet_process.roclet_rd2 <- function(x, blocks, env, base_path = env, global_options = list()){
   
   parsed <- if( !is.null(blocks[['blocks']]) ) blocks else list(blocks = blocks) 
   parsed$env <- parsed$env %||% env
   # build inline set
   inline_set <- unlist(sapply(parsed$blocks, function(x){
-        x$object <- x$object %||% attr(x, 'object')
+        x <- block_backport(x)
         if( !is.null(x$inline) && class(x$object) == 's4generic' ){
           setNames(as.character(x$object$value@generic), x$rdname)
         }
@@ -75,8 +75,10 @@ roclet_process.roclet_rd2 <- function(x, blocks, env, base_path, global_options 
   for (i in seq_along(parsed$blocks)) {
     block <- parsed$blocks[[i]]
     hash <- digest(block)
+    block <- block_backport(block)
     
-    block$object <- block$object %||% attr(block, 'object')
+    # NB: for describeIn S4 classes, the destination tag should be the name of the class, 
+    # not <name>-class
     if( any(class(block$object) %in% 's4method') ){
         generic_name <- as.character(block$object$value@generic) 
         if( (generic_name %||% '') %in% inline_set && is.null(block$describeIn) ){
@@ -101,8 +103,6 @@ roclet_process.roclet_rd2 <- function(x, blocks, env, base_path, global_options 
     
     # process cite
     block <- process_cite(block, base_path, parsed$env, global_options)
-    attr(block, 'filename') <- attr(block, 'filename') %||% ''
-    attr(block, 'location') <- attr(block, 'location') %||% ''
     
     if( digest(block) != hash ) parsed$blocks[[i]] <- block
   }

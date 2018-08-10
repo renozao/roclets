@@ -33,3 +33,24 @@ read.bib2 <- function (file = findBibFile(package), package = "bibtex", encoding
 }
 environment(read.bib2) <- asNamespace('bibtex')
 
+
+block_tags <- function(x, tag) {
+  x[names(x) %in% tag]
+}
+
+block_object <- function(x){
+  x[['object']] %||% attr(x, 'object')
+  
+}
+
+# fix block for backward compatibility
+block_backport <- function(block){
+  if( is.null(block) ) return(block)
+  
+  block$object <- block_object(block)
+  if( !length(attr(block, 'filename')) ) attr(block, 'filename') <- ''
+  if( !length(attr(block, 'location')) ) attr(block, 'location') <- ''
+  
+  block
+  
+}
