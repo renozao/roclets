@@ -54,3 +54,16 @@ block_backport <- function(block){
   block
   
 }
+
+#' @importFrom utils head tail
+str_excerpt <- function(x, head = 2, tail = 2){
+  i <- seq_along(x)
+  n <- length(x)
+  head <- min(head, n)
+  tail <- min(tail, n)
+  i <- unique(c(head(i, head), tail(i, tail)))
+  x <- x[i]
+  if( length(x) > head + tail ) x <- c(head(x, head), "...", tail(x, -head)) 
+  paste0(x, collapse = ", ")
+  
+}

@@ -2,19 +2,24 @@
 % Please edit documentation in R/roclet-rd2.R
 \name{rd2_roclet}
 \alias{rd2_roclet}
-\alias{roclet_tags.roclet_rd2}
 \alias{roclet_process.roclet_rd2}
 \alias{roclet_clean.roclet_rd2}
 \title{Replacement Roclet for Generating Rd Files}
 \usage{
 rd2_roclet()
 
-\method{roclet_tags}{roclet_rd2}(x)
-
-\method{roclet_process}{roclet_rd2}(x, parsed, base_path,
-  global_options = list())
+\method{roclet_process}{roclet_rd2}(x, blocks, env, base_path = env)
 
 \method{roclet_clean}{roclet_rd2}(x, base_path)
+}
+\arguments{
+\item{x}{A \code{roclet} object.}
+
+\item{blocks}{A list of \link[roxygen2]{roxy_block} objects.}
+
+\item{env}{Package environment.}
+
+\item{base_path}{Path to root of source package.}
 }
 \description{
 This roclets acts as a drop-in replacement for [roxygen2::rd_roclet], 
@@ -31,14 +36,39 @@ Roxygen: list(roclets = c('collate', 'namespace', 'roclets::rd2_roclet'))
 
 Extra features are sometimes submitted as pull request to be 
 incorporated into the main `roxygen2` package.
-This roclet enables using while they are being reviewed -- and 
+This roclet enables using them while they are being reviewed -- and 
 potentially not accepted.
 }
-\section{Roxygen tags and commands}{
+\section{Bibliography-backed references}{
 
-  * @cite: 
-  * @bibliography:
-  * \\cite: 
-  * @inline:
+
+Adds support for the following:
+
+  * tag `@bibliography` in roxygen chunks: declares external Bibtex files in which the entries  
+  parsed from `@cite`, `\\cite`, `\\citep` or `[@]` commands are copied from. This is typically a large
+  file that contains all your references.
+  * tag `@cite <bibtex_entries>` in roxygen chunks: to add references to the man page using their
+  bibtex entry.
+  * `\\cite` or `\\citep` in Latex markup-based documents such as vignettes or 
+  roxygen chunks
+  * `[@<author2019>]` in markdown-based documents such as vignettes 
+  or roxygen chunks
+  
+At the end of a `roxygenize` run, all the references found in the package man pages
+or vignettes are gathered and stored in file `inst/REFERENCES.bib` in the source 
+package directory, hence making the generation of package independent of the -- large --
+external Bibtex file.
 }
 
+\examples{
+library(roxygen2)
+text <-"
+#' Title
+#'
+#' @bibliography a/b/c.bib
+f <- function(){
+}
+"
+parse_text(text)
+
+}

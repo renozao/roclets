@@ -18,43 +18,55 @@
 #' @details
 #' Extra features are sometimes submitted as pull request to be 
 #' incorporated into the main `roxygen2` package.
-#' This roclet enables using while they are being reviewed -- and 
+#' This roclet enables using them while they are being reviewed -- and 
 #' potentially not accepted.
 #' 
+#' @section Bibliography-backed references:
+#' 
+#' Adds support for the following:
+#' 
+#'   * tag `@@bibliography` in roxygen chunks: declares external Bibtex files in which the entries  
+#'   parsed from `@@cite`, `\\cite`, `\\citep` or `[@@]` commands are copied from. This is typically a large
+#'   file that contains all your references.
+#'   * tag `@@cite <bibtex_entries>` in roxygen chunks: to add references to the man page using their
+#'   bibtex entry.
+#'   * `\\cite` or `\\citep` in Latex markup-based documents such as vignettes or 
+#'   roxygen chunks
+#'   * `[@@<author2019>]` in markdown-based documents such as vignettes 
+#'   or roxygen chunks
+#'   
+#' At the end of a `roxygenize` run, all the references found in the package man pages
+#' or vignettes are gathered and stored in file `inst/REFERENCES.bib` in the source 
+#' package directory, hence making the generation of package independent of the -- large --
+#' external Bibtex file.
+#' 
+#' @noMd
 #' @import roxygen2 digest
 #' @export
+#' @examples 
+#' library(roxygen2)
+#' text <-"
+#' #' Title
+#' #'
+#' #' @bibliography a/b/c.bib
+#' f <- function(){
+#' }
+#' "
+#' parse_text(text)
+#' 
 rd2_roclet <- function() {
   roc <- roclet("rd2")
   # Add roclet_rd class to inherit its methods
   class(roc) <- append(class(roc), 'roclet_rd', after = 1L)
   roc
-}
-
-#' @section Roxygen tags and commands:
-#'   * @@cite: 
-#'   * @@bibliography:
-#'   * \\cite: 
-#'   * @@inline:
-#' 
-#' @export
-#' @rdname rd2_roclet
-roclet_tags.roclet_rd2 <- function(x) {
-  # call rd_roclet tags method
-  tags <- NextMethod()
-  
-  # add extra tags
-  c(tags, list(
-    cite = tag_cite,
-    bibliography = tag_bibliography,
-    inline = tag_toggle
-  ))
   
 }
 
 #' @inheritParams roxygen2::roclet_process
+#' @importFrom stats setNames
 #' @export
 #' @rdname rd2_roclet
-roclet_process.roclet_rd2 <- function(x, blocks, env, base_path = env, global_options = list()){
+roclet_process.roclet_rd2 <- function(x, blocks, env, base_path = env){
   
   parsed <- if( !is.null(blocks[['blocks']]) ) blocks else list(blocks = blocks) 
   parsed$env <- parsed$env %||% env
@@ -102,7 +114,7 @@ roclet_process.roclet_rd2 <- function(x, blocks, env, base_path = env, global_op
       next
     
     # process cite
-    block <- process_cite(block, base_path, parsed$env, global_options)
+    block <- process_cite(block, base_path, parsed$env)
     
     if( digest(block) != hash ) parsed$blocks[[i]] <- block
   }
