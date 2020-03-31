@@ -41,12 +41,12 @@ roxy_tag_parse.roxy_tag_bibliography <- function(x) {
 
 # parse vignettes for \cite commands
 process_cite_vignettes <- function(roxybib, base_path){
-
+  read_lines <- get("read_lines", envir = asNamespace("roxygen2"))
   # list vignettes
   vfiles <- list.files(file.path(base_path, 'vignettes'), pattern = "\\.((rmd)|(rnw))$", ignore.case = TRUE, full.names = TRUE)
   # parse and format to add to current roxy bib object
   lapply(vfiles, function(f){
-        l <- readLines(f)
+        l <- read_lines(f)
         i <- grep("^\\s*\\\\begin\\s*\\{\\s*document\\s*\\}", l)
         if( length(i) ) l <- tail(l, -i)
         x <- paste0(l, collapse = "\n")
@@ -294,4 +294,31 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
 
   ))
 
+.process_references <- function(blocks, env, base_path = env){
+  opts <- load_options(base_path)
+  disabled <- identical(opts[["bibliography"]], FALSE)
+  if( disabled ) return(blocks)
+  
+  # get bibfile cache object
+  BIBS <- RoxyBibObject(base_path = base_path)
+  # parse citations in vignettes
+  process_cite_vignettes(BIBS, base_path)
 
+  # extract citations in tag values and add them as reference tags
+  for (i in seq_along(blocks)) {
+    block <- blocks[[i]]
+    hash <- digest(block)
+    block <- block_backport(block)
+    
+    if (length(block) == 0)
+      next
+    
+    # process cite
+    block <- process_cite(block, base_path, parsed$env)
+    
+    if( digest(block) != hash ) blocks[[i]] <- block
+  }
+  
+  blocks
+  
+}
