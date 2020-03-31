@@ -71,6 +71,8 @@ roclet_process.roclet_rd2 <- function(x, blocks, env, base_path = env){
   # Must start by processing templates
   blocks <- lapply(blocks, roxygen2:::process_templates, base_path = base_path)
   
+  blocks <- .add_internal_blocks(blocks, env, base_path)
+  blocks <- .add_method_mini_sections(blocks, env, base_path)
   blocks <- .process_references(blocks, env, base_path)
   
   # call roclet_rd process method to update the .Rd files
