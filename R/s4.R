@@ -84,12 +84,12 @@ escape <- function (x){
   block_obj <- block_object(block)
   classes_to_process <- c("s4method", "s3method")
   obj_class <- block_get_object_class(block)
-  if( !obj_class %in% classes_to_process ) return()
+  if( !any(obj_class %in% classes_to_process) ) return()
   # if( !length(obj_class) || block_has_tags(block, c("describeIn", "rdname")) ) return()
   
   local_s4classes <- unique(target_blocks[target_blocks[, "type"] %in% "s4class", "target"])
   local_s4generic <- target_blocks[target_blocks[, "type"] %in% "s4generic", , drop = FALSE]
-  if( obj_class == "s4method" ){
+  if( any(obj_class %in% "s4method") ){
     obj_generic <- as.character(block_obj$value@generic)
     s4class_targets <- intersect(paste0(block_obj$value@defined, "-class"), local_s4classes)
     s4generic_targets <- local_s4generic[local_s4generic[, "target"] %in% obj_generic, , drop = FALSE]
@@ -213,7 +213,7 @@ NULL
     # if not, then replace the block by its mini-description version, forcing it to be merged
     # into its first target block.
     block_obj <- block_object(block)
-    obj_class <- block_get_object_class(block)
+    # obj_class <- block_get_object_class(block)
     # if( obj_class %in% "s4method" && as.character(block_obj$value@generic) %in% "run" ) browser()
     need_separate_doc <- block_has_tags(block, c("section", "describeIn", "rdname")) && !block_has_tags(block, c("inline"))
     block_with_minidesc <- build_compact_block(block, base_path = base_path, full = !need_separate_doc)
