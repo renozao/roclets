@@ -110,7 +110,8 @@ escape <- function (x){
   # look for the targets where to put add a minidesc
   target_blocks <- target_blocks[target_blocks[, "target"] %in% target_name & 
                                    target_blocks[, "type"] %in% target_type, , drop = FALSE]
-  target_blocks <- target_blocks[order(match(target_blocks[, "target"], target_name)), , drop = FALSE]
+  target_blocks[, "preference"] <- match(target_blocks[, "type"], target_type)
+  target_blocks <- target_blocks[order(target_blocks[, "preference"]), , drop = FALSE]
   
   # remove the target block that might already be declared in the block
   original_rdname <- block_get_tag_value(block, "describeIn") %||% block_get_tag_value(block, "rdname")
@@ -207,7 +208,6 @@ NULL
     block <- block_backport(block)
     dest_blocks <- .find_target_blocks(block, target_blocks)
     if( is.null(dest_blocks) || !nrow(dest_blocks) ) next;
-    
     primary_target_rdname <- dest_blocks[1L, "rdname"]
     # determine if the method deserves a separate documentation:
     # if not, then replace the block by its mini-description version, forcing it to be merged
