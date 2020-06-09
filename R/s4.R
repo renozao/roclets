@@ -278,6 +278,7 @@ build_compact_block <- function(block, base_path, full = TRUE){
   
 }
 
+#' @export
 roxy_tag_rd.roxy_tag_method_minidesc <- function(x, base_path, env) {
   value <- x$val
   if( !length(value$desc) ) roxy_tag_warning(x, "Empty method description")
