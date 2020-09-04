@@ -381,7 +381,9 @@ build_label2 <- function(src) {
   if (src_type == "s4generic") {
     # Label S4 methods in class with their generic
     type <- "generic"
-    label <- as.character(src$value@generic)
+    generic <- as.character(src$value@generic)
+    label <- setNames(nm = generic)
+    
   } else if (src_type == "s4method") {
     # Label S4 methods in generic with their signature
     type <- "method"
@@ -392,15 +394,19 @@ build_label2 <- function(src) {
       generic <- as.character(src$value@generic)
       label <- setNames(sprintf("%s(%s)", generic, paste0(names(sig), " = ", sig, collapse = ",")), generic)
     # }
+      
   } else if (src_type == "s3method") {
     # Assuming you document S3 methods in the class constructor
     type <- "method"
     generic <- attr(src$value, "s3method")[1]
     label <- setNames(sprintf("%s(%s)", generic, attr(src$value, "s3method")[2]), generic)
+    
   } else {
     # Otherwise just fallback to function + topic
     type <- "function"
-    label <- src$topic
+    topic <- src$topic
+    label <- setNames(nm = topic)
+    
   }
 
   list(type = type, label = label)
