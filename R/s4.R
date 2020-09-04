@@ -242,6 +242,32 @@ NULL
   blocks
 }
 
+.process_describeIn_into_minidesc <- function(blocks, env, base_path){
+
+  opts <- load_options(base_path)
+  disabled <- identical(opts[["compact"]], FALSE)
+  if( disabled ) return(blocks)
+
+  for (i in seq_along(blocks)) {
+    block <- blocks[[i]]
+    hash <- digest(block)
+    block <- block_backport(block)
+
+    if( !block_has_tags(block, "describeIn") ) next
+    target <- block_get_tag_value(block, "describeIn")[["name"]]
+    block_with_minidesc <- build_compact_block(block, base_path = base_path, full = TRUE)
+    .roxy_tag(block_with_minidesc, "rdname") <- roxy_tag_parse(roxy_tag("rdname", target))
+    block <- block_with_minidesc
+
+    if (length(block) == 0) next
+    if( digest(block) != hash ) blocks[[i]] <- block
+
+  }
+
+  blocks
+
+}
+
 #' @importFrom checkmate assert_subset
 build_compact_block <- function(block, base_path, full = TRUE){
   

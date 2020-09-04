@@ -73,6 +73,7 @@ roclet_process.roclet_rd2 <- function(x, blocks, env, base_path = env){
   
   blocks <- .add_internal_blocks(blocks, env, base_path)
   blocks <- .add_method_mini_sections(blocks, env, base_path)
+  blocks <- .process_describeIn_into_minidesc(blocks, env, base_path)
   blocks <- .process_references(blocks, env, base_path)
   
   # call roclet_rd process method to update the .Rd files
