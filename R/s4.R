@@ -114,7 +114,7 @@ escape <- function (x){
   target_blocks <- target_blocks[order(target_blocks[, "preference"]), , drop = FALSE]
   
   # remove the target block that might already be declared in the block
-  original_rdname <- block_get_tag_value(block, "describeIn") %||% block_get_tag_value(block, "rdname")
+  original_rdname <- block_get_tag_value(block, "describeIn")[["name"]] %||% block_get_tag_value(block, "rdname")
   target_blocks <- target_blocks[!target_blocks[, "rdname"] %in% original_rdname, , drop = FALSE]
   
   target_blocks
