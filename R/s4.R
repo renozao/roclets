@@ -199,7 +199,7 @@ NULL
 
   # gather all the potential targets: S4 classes and S3/S4 generics
   target_blocks <- .build_target_block(blocks)
-  if( !nrow(target_blocks) ) return(blocks)
+  if( !length(target_blocks) || !nrow(target_blocks) ) return(blocks)
   # str(target_blocks)
   
   for (i in seq_along(blocks)) {
