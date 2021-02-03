@@ -21,12 +21,19 @@ escape <- function (x){
     x2
 }
 
-`.roxy_tag<-` <- function(block, name, value){
+`.roxy_tag<-` <- function(block, name, add = FALSE, value){
   hit <- which(roxygen2:::block_tags(block) %in% name)
   if( !length(hit) ){
     if( !is.null(value) ) block$tags <- c(block$tags, list(value))
   }else{
-    stopifnot(length(hit) == 1L)
+    if( !add && length(hit) != 1L ){
+      stop(sprintf("Target block has multiple tags '%s':\n%s",
+                   name, 
+                   paste0(">> ", 
+                          sapply(block$tags[hit], function(x) capture_output(str(x))), 
+                          collapse = "\n")))
+      
+    }
     block$tags[[hit]] <- value
   }
   block
@@ -296,7 +303,7 @@ build_compact_block <- function(block, base_path, full = TRUE){
     .roxy_tag(block, "title") <- NULL
     .roxy_tag(block, "description") <- NULL
     .roxy_tag(block, "details") <- NULL
-    .roxy_tag(block, "method_minidesc") <- tag
+    .roxy_tag(block, "method_minidesc", add = TRUE) <- tag
     
   }
   
