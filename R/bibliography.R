@@ -210,7 +210,6 @@ RoxyBib <- R6::R6Class("RoxyBib", public = list(
       load_bib = function(){
         path <- setdiff(self$bibfiles, self$bibs_loaded)[1L]
         if( !length(path) || is.na(path) || !file.exists(path) ) return(FALSE)
-        library(bibtex)
         i_bib <- match(path, self$bibfiles)
         message(sprintf("(BIB[%s]: ", i_bib), appendLF = FALSE)
         newbibs <- suppressMessages(suppressWarnings(read.bib2(file = path)))

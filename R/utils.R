@@ -5,11 +5,18 @@
 
 `%||%` <- function(a, b) if( is.null(a) ) b else a
 
-#' @import bibtex
-read.bib2 <- function(...){
-  library(bibtex)
-  bibtex::read.bib(...)
+#' @importFrom rbibutils readBib
+read.bib2 <- function(file){
+  library(rbibutils)
+  rbibutils::readBib(normalizePath(file), encoding = "UTF-8")
 }
+
+#' @importFrom rbibutils writeBib
+write.bib <- function(object, file){
+  rbibutils::writeBib(object, con = file)
+  
+}
+
 # copied and fixed from bibtex::read.bib
 # read.bib2 <- function (file = findBibFile(package), package = "bibtex", encoding = "unknown", 
 #     header = if (length(preamble)) paste(preamble, sep = "\n") else "", 
