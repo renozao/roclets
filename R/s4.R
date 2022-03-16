@@ -26,15 +26,21 @@ escape <- function (x){
   if( !length(hit) ){
     if( !is.null(value) ) block$tags <- c(block$tags, list(value))
   }else{
-    if( !add && length(hit) != 1L ){
-      stop(sprintf("Target block has multiple tags '%s':\n%s",
-                   name, 
-                   paste0(">> ", 
-                          sapply(block$tags[hit], function(x) capture_output(str(x))), 
-                          collapse = "\n")))
+    if( !add ) {
+      if( length(hit) != 1L ){
+        stop(sprintf("Target block has multiple tags '%s':\n%s",
+                     name, 
+                     paste0(">> ", 
+                            sapply(block$tags[hit], function(x) capture_output(str(x))), 
+                            collapse = "\n")))
+        
+      }
+      block$tags[[hit]] <- value
+      
+    }else{
+      block$tags <- c(block$tags, list(value))
       
     }
-    block$tags[[hit]] <- value
   }
   block
   
@@ -299,7 +305,9 @@ build_compact_block <- function(block, base_path, full = TRUE){
   # buid mini-description if possible
   if( !is.null(val) ){
     info <- build_label2(block_object(block))
-    tag <- roxy_tag("method_minidesc", raw = "", val = list(type = info$type, label = info$label, desc = val))
+    tag <- roxy_tag("method_minidesc", raw = "", 
+                    val = list(type = info$type, label = info$label, desc = val), 
+                    file = block$file, line = block$line)
     .roxy_tag(block, "title") <- NULL
     .roxy_tag(block, "description") <- NULL
     .roxy_tag(block, "details") <- NULL
@@ -313,10 +321,13 @@ build_compact_block <- function(block, base_path, full = TRUE){
 
 #' @export
 roxy_tag_rd.roxy_tag_method_minidesc <- function(x, base_path, env) {
-  value <- x$val
+  value <- x$val$val %||% x$val
   if( !length(value$desc) ) roxy_tag_warning(x, "Empty method description")
   label <- value$label
-  stopifnot( !is.null(names(label)) )
+  if( is.null(names(label)) ){
+    str(value)
+    stop("Null label")
+  }
   
   rd_section_method_minidesc(type = value$type, entry = names(label), label = label, desc = value$desc)
   
