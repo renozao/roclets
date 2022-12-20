@@ -287,7 +287,9 @@ build_compact_block <- function(block, base_path, full = TRUE){
   # extract title, description and details from the @describeIn tag if present
   describeIn_description <- block_get_tag_value(block, "describeIn")[["description"]]
   if( !is.null(describeIn_description) ){
-    block_desc <- roxygen2:::parse_tags(roxygen2:::parse_description(list(roxy_tag("", describeIn_description, line = block[["line"]] %||% 0))))
+    block_desc <- roxygen2:::parse_tags(roxygen2:::parse_description(list(roxy_tag("", describeIn_description, 
+                                                                                   file = block[["file"]] %||% NA_character_,
+                                                                                   line = block[["line"]] %||% 0))))
     assert_subset(roxygen2:::block_tags(block_desc), c("title", "description", "details"))
     block$tags <- roxygen2:::compact(c(block$tags, block_desc))
     .roxy_tag(block, "describeIn") <- NULL
