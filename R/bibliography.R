@@ -88,17 +88,24 @@ process_cite <- function(block, base_path, env){
     # 2. add parsed keys as references tags
     if( length(bibkeys) ){
       bibkeys <- unique(bibkeys)
-      lapply(bibkeys, function(bk){
-        cite_statement <- sprintf('\\cite{%s}', bk)
-        block[["tags"]] <<- append(block[["tags"]], list(roxy_tag("references", raw = cite_statement, val = cite_statement)))
-      })
+      block <- .add_references_to_block(block, bibkeys)
+      
     }
   }
 
   # 3. process references
   j_ref <- which(.get_block_tags(block) %in% 'references')
   if( length(j_ref) ){
+    # collect and replace tags with unique references 
+    # 1. collect
     ref_res <- lapply(block[["tags"]][j_ref], gsub_cite, bibs = BIBS, short = FALSE, block = block)
+    bibkeys <- unique(unlist(lapply(ref_res, "[[", "bibkeys")))
+    block[["tags"]][j_ref] <- NULL
+    # 2. replace
+    block <- .add_references_to_block(block, bibkeys)
+    j_ref <- which(.get_block_tags(block) %in% 'references')
+    ref_res <- lapply(block[["tags"]][j_ref], gsub_cite, bibs = BIBS, short = FALSE, block = block)
+    
     # process references as markdown
     block[["tags"]][j_ref] <- lapply(ref_res, "[[", "value") #tag_markdown(roxy_tag('references', raw = x$value$val, val = x$value$val))$val)
     
@@ -111,6 +118,15 @@ process_cite <- function(block, base_path, env){
     return(block)
   }
   block0
+}
+
+.add_references_to_block <- function(block, bibkeys){
+  lapply(bibkeys, function(bk){
+    cite_statement <- sprintf('\\cite{%s}', bk)
+    block[["tags"]] <<- append(block[["tags"]], list(roxy_tag("references", raw = cite_statement, val = cite_statement)))
+  })
+  block
+  
 }
 
 # find cite tags and resolve them against bibfiles
