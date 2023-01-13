@@ -5,15 +5,14 @@
 
 `%||%` <- function(a, b) if( is.null(a) ) b else a
 
-#' @importFrom rbibutils readBib
+#' @importFrom bibtex read.bib
 read.bib2 <- function(file){
-  library(rbibutils)
-  rbibutils::readBib(normalizePath(file), encoding = "UTF-8")
+  bibtex::read.bib(normalizePath(file), encoding = "UTF-8")
 }
 
-#' @importFrom rbibutils writeBib
+#' @importFrom bibtex read.bib
 write.bib <- function(object, file){
-  rbibutils::writeBib(object, con = file)
+  bibtex::write.bib(object, file = file)
   
 }
 

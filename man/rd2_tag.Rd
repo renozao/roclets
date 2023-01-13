@@ -18,10 +18,10 @@ Extra Roxygen Tags
 }
 \section{Functions}{
 \itemize{
-\item \code{roxy_tag_parse.roxy_tag_cite}: Provides support for tags \verb{@cite} that should contain Bibtex
+\item \code{roxy_tag_parse(roxy_tag_cite)}: Provides support for tags \verb{@cite} that should contain Bibtex
 entry keys, which are looked-up in the \code{inst/REFERENCES.bib} file or external
 Bibtex files specified via tag @bibliography
 
-\item \code{roxy_tag_parse.roxy_tag_bibliography}: Provides support for tag \verb{@bibliography}
-}}
+\item \code{roxy_tag_parse(roxy_tag_bibliography)}: Provides support for tag \verb{@bibliography}
 
+}}

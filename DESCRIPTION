@@ -11,9 +11,9 @@ Imports:
 	utils
 	, roxygen2 (>= 7.0.2)
 	, digest
-	, rbibutils
+	, bibtex
 	, stringr
 	, pkgload
 	, purrr
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
