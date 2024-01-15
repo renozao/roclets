@@ -100,7 +100,7 @@ process_cite <- function(block, base_path, env){
     # 1. collect
     ref_res <- lapply(block[["tags"]][j_ref], gsub_cite, bibs = BIBS, short = FALSE, block = block)
     bibkeys <- unique(unlist(lapply(ref_res, "[[", "bibkeys")))
-    block[["tags"]][j_ref] <- NULL
+    if( length(bibkeys) ) block[["tags"]][j_ref] <- NULL
     # 2. replace
     block <- .add_references_to_block(block, bibkeys)
     j_ref <- which(.get_block_tags(block) %in% 'references')
